@@ -1,5 +1,12 @@
 #include "philo.h"
 
+int is_digit(char c)
+{
+	if (c >= '0' && c <= '9')
+		return (1);
+	return (0);
+}
+
 int	ft_atoi(const char *s)
 {
 	int				i;
@@ -29,17 +36,17 @@ int	ft_atoi(const char *s)
 	return (r * sign);
 }
 
-void	*ft_calloc(size_t count, size_t size)
-{
-	unsigned char	*s;
-	unsigned int	i;
+// void	*ft_calloc(size_t count, size_t size)
+// {
+// 	unsigned char	*s;
+// 	unsigned int	i;
 
-	if (size && count > (SIZE_MAX / size))
-		return (NULL);
-	i = count * size;
-	s = malloc(i);
-	if (!s)
-		return (NULL);
-	ft_memset(s, 0, i);
-	return (s);
-}
+// 	if (size && count > (SIZE_MAX / size))
+// 		return (NULL);
+// 	i = count * size;
+// 	s = malloc(i);
+// 	if (!s)
+// 		return (NULL);
+// 	ft_memset(s, 0, i);
+// 	return (s);
+// }
