@@ -1,6 +1,9 @@
 NAME = philo
 
-SRC = mainlo.c pharse.c utils.c
+SRC = mainlo.c \
+	pharse.c \
+	utils.c\
+	free_error.c\
 
 OBJ = $(SRC:.c=.o)
 

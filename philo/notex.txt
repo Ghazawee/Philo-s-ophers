@@ -1,0 +1,4 @@
+- add a separate thread for monitoring
+- add a mutex for printing
+- create and join threads for philoooooooooos &&
+- start with the routine tomorrow or later tonight
