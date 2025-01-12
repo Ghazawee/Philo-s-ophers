@@ -1,5 +1,19 @@
 #include "philo.h"
 
+void	gs_sleep(int time, t_philo *philo) // maybe return 0/1 if philo is dead or not
+{
+	long action;
+
+	action = time;
+	while (action > 0)
+	{
+		if (check_dead(philo->phdata))
+			return ;
+		usleep(1000);
+		action -= 1;
+	}
+}
+
 void	lock_set_unlock(pthread_mutex_t *mutex, int *var, int value)
 {
 	pthread_mutex_lock(mutex);
@@ -33,7 +47,7 @@ int	gs_logs(t_phdata *phdata, int id, char *msg)
 	return (0);
 }
 
-void	unlock_fork_waiter(t_philo *philo, int count)
+void	unlock_fork_waiter(t_philo *philo, int count) // remove waiter from the function, this will only handle forks
 {
 	if(count == 1)
 	{
@@ -103,10 +117,10 @@ void    *gs_routi(void *arg)
 	while(!philo->phdata->stop_sim)
 	{
 		if (philo->phdata->num_philo == 1)
-			return (handle_one_philo(philo));
+			return (handle_one_philo(philo)); 
 		if (gs_logs(philo->phdata, philo->id, "is thinking"))
 			return (NULL);
-		philo_eat(philo);
+		philo_eat(philo); // need to check if forks avail before hand and only then i eat and sleep, else they think
 		if (check_dead(philo->phdata))
 			return (NULL);
 		if (gs_logs(philo->phdata, philo->id, "is sleeping"))
