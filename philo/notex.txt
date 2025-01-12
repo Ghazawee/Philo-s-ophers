@@ -2,3 +2,23 @@
 - add a mutex for printing
 - create and join threads for philoooooooooos &&
 - start with the routine tomorrow or later tonight
+
+
+- check if av[5] is less than zero throw an error,
+- improve usleep to check every 1 ms if philo is dead
+- remove waiter no need it was messing up the code
+- if a philo is going to eat dont write thinking
+- only increment meal_count, and get_time for last_meal after the improved usleep is done
+
+
+0-200
+200-400
+
+400-600
+600-800
+
+800-1000
+1000-1200
+
+1400-1600
+1600-1800

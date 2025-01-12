@@ -26,6 +26,10 @@ void cleanup_mutexes(t_phdata *phdata)
         i++;
     }
     free(phdata->forks);
+    pthread_mutex_destroy(&phdata->print);
+    pthread_mutex_destroy(&phdata->state);
+    pthread_mutex_destroy(&phdata->waiter);
+    pthread_mutex_destroy(&phdata->stop_mutex);
 }
 
 void cleanup_all(t_phdata *phdata)

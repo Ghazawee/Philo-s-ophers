@@ -4,6 +4,7 @@ SRC = mainlo.c \
 	pharse.c \
 	utils.c\
 	free_error.c\
+	philo_routine.c\
 
 OBJ = $(SRC:.c=.o)
 

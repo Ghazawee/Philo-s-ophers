@@ -1,18 +1,18 @@
 #ifndef PHILO_H
-#define PHILO_H
+# define PHILO_H
 
-#include <pthread.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <limits.h>
-#include <stdint.h>
-#include <sys/time.h>
+# include <pthread.h>
+# include <stdio.h>
+# include <stdlib.h>
+# include <unistd.h>
+# include <limits.h>
+# include <stdint.h>
+# include <sys/time.h>
 
-typedef struct s_phdata t_phdata;
+typedef struct s_phdata	t_phdata;
 
-typedef struct s_philo{
-	
+typedef	struct	s_philo
+{
 	pthread_t		thrd;
 	int				id;
 	int		 		meals_count;
@@ -22,8 +22,8 @@ typedef struct s_philo{
 	t_phdata		*phdata;
 }t_philo;
 
-typedef struct s_phdata{
-	
+typedef struct	s_phdata
+{	
 	int     		num_philo;
 	int     		time_to_die;
 	int     		time_to_eat;
@@ -32,6 +32,11 @@ typedef struct s_phdata{
 	long			start_time;
 	int				stop_sim;
 	pthread_mutex_t	*forks;
+	pthread_mutex_t	print;
+	pthread_mutex_t state;
+	pthread_mutex_t waiter;
+	pthread_mutex_t stop_mutex;
+	pthread_t 		monit;
 	t_philo 		*philo;
 }t_phdata;
 
@@ -42,6 +47,9 @@ void	cleanup_all(t_phdata *phdata);
 //------------------pharse---------------------//
 void    gs_init_phdata(char **av, t_phdata *phdata);
 int		get_time();
+//---------------philo_routine-----------------//
+void    *gs_routi(void *arg);
+void    *gs_mont(void *arg);
 //------------------utils---------------------//
 int     is_digit(char c);
 int     ft_atoi(const char *s);

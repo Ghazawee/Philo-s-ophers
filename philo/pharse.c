@@ -32,6 +32,30 @@ int get_time()
     return (tv.tv_sec * 1000 + tv.tv_usec / 1000);
 }
 
+void init_mutexes(t_phdata *phdata)
+{
+    if (pthread_mutex_init(&phdata->print, NULL) != 0)
+    {
+        cleanup_mutexes(phdata);
+        gs_error(4);
+    }
+    if(pthread_mutex_init(&phdata->state, NULL) != 0)
+    {
+        cleanup_mutexes(phdata);
+        gs_error(4);
+    }
+    if(pthread_mutex_init(&phdata->waiter, NULL) != 0)
+    {
+        cleanup_mutexes(phdata);
+        gs_error(4);
+    }
+    if (pthread_mutex_init(&phdata->stop_mutex, NULL) != 0)
+    {
+        cleanup_mutexes(phdata);
+        gs_error(4);
+    }
+}
+
 void init_fork_mutex(t_phdata *phdata)
 {
     int i;
@@ -53,6 +77,7 @@ void    init_forks_philo(t_phdata *phdata)
     int i;
 
     i = 0;
+    init_mutexes(phdata);
     phdata->forks = malloc(sizeof(pthread_mutex_t) * phdata->num_philo);
     if (!phdata->forks)
         gs_error(2);
@@ -67,7 +92,7 @@ void    init_forks_philo(t_phdata *phdata)
     {
         phdata->philo[i].id = i + 1;
         phdata->philo[i].meals_count = 0;
-        phdata->philo[i].last_meal = 0;
+        phdata->philo[i].last_meal = phdata->start_time;
         phdata->philo[i].l_fork = &phdata->forks[i];
         phdata->philo[i].r_fork = &phdata->forks[(i + 1) % phdata->num_philo]; // wrap around mechanism
         phdata->philo[i].phdata = phdata;
@@ -93,8 +118,8 @@ void    gs_init_phdata(char **av, t_phdata *phdata)
     phdata->stop_sim = 0;
     phdata->start_time = get_time();
     init_forks_philo(phdata);
-    printf("start_time: %ld\n", phdata->start_time);
-    printf("num_philo: %d\ntime_to_die: %d\ntime_to_eat: %d\ntime_to_sleep: %d\n", phdata->num_philo, phdata->time_to_die, phdata->time_to_eat, phdata->time_to_sleep);
-    if(phdata->eat_limit != -1)
-        printf("eat_limit: %d\n", phdata->eat_limit);
+    // printf("start_time: %ld\n", phdata->start_time);
+    // printf("num_philo: %d\ntime_to_die: %d\ntime_to_eat: %d\ntime_to_sleep: %d\n", phdata->num_philo, phdata->time_to_die, phdata->time_to_eat, phdata->time_to_sleep);
+    // if(phdata->eat_limit != -1)
+    //     printf("eat_limit: %d\n", phdata->eat_limit);
 }
