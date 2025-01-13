@@ -31,6 +31,7 @@ typedef struct	s_phdata
 	int     		eat_limit;
 	long			start_time;
 	int				stop_sim;
+	// char			*forks;
 	pthread_mutex_t	*forks;
 	pthread_mutex_t	print;
 	pthread_mutex_t state;

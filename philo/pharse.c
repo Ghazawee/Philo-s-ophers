@@ -112,7 +112,7 @@ void    gs_init_phdata(char **av, t_phdata *phdata)
         phdata->eat_limit = ft_atoi(av[5]);
     else
         phdata->eat_limit = -1;
-    if (phdata->num_philo < 1 || phdata->num_philo > 200 || phdata->time_to_die
+    if (phdata->num_philo < 1 || phdata->time_to_die
          < 60 || phdata->time_to_eat < 60 || phdata->time_to_sleep < 60)
         gs_error(1);
     phdata->stop_sim = 0;
@@ -122,4 +122,5 @@ void    gs_init_phdata(char **av, t_phdata *phdata)
     // printf("num_philo: %d\ntime_to_die: %d\ntime_to_eat: %d\ntime_to_sleep: %d\n", phdata->num_philo, phdata->time_to_die, phdata->time_to_eat, phdata->time_to_sleep);
     // if(phdata->eat_limit != -1)
     //     printf("eat_limit: %d\n", phdata->eat_limit);
+    // || phdata->num_philo > 200 
 }

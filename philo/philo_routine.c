@@ -52,8 +52,17 @@ int	gs_logs(t_phdata *phdata, int id, char *msg)
 
 void	unlock_fork(t_philo *philo) // remove waiter from the function, this will only handle forks
 {
-	pthread_mutex_unlock(philo->r_fork);
-	pthread_mutex_unlock(philo->l_fork);
+	if (philo->l_fork < philo->r_fork)
+	{
+		pthread_mutex_unlock(philo->l_fork);
+		pthread_mutex_unlock(philo->r_fork);
+	}
+	else
+	{
+		pthread_mutex_unlock(philo->r_fork);
+		pthread_mutex_unlock(philo->l_fork);
+	}
+
 }
 
 void	philo_eat(t_philo *philo)
@@ -88,24 +97,46 @@ void	*handle_one_philo(t_philo *philo)
 	usleep(philo->phdata->time_to_die * 1000);
 	return (NULL);
 }
+// int	is_forks_pickable(t_philo *philo)
+// {
+// 	while (!check_dead(philo->phdata))
+// 	{
+// 		if(pthread_mutex_lock(philo->l_fork) == 0)
+// 		{
+// 			if(pthread_mutex_lock(philo->r_fork) == 0)
+// 			{
+// 				return (1);
+// 			}
+// 		}
+// 	}
+// 	return (0);
+// }
 
 int	is_forks_pickable(t_philo *philo)
 {
-	while (!philo->phdata->stop_sim)
+	pthread_mutex_t *f_fork;
+	pthread_mutex_t *s_fork;
+
+	if (philo->l_fork < philo->r_fork)
 	{
-		if(pthread_mutex_lock(philo->l_fork) == 0)
+		f_fork = philo->l_fork;
+		s_fork = philo->r_fork;
+	}
+	else
+	{
+		f_fork = philo->r_fork;
+		s_fork = philo->l_fork;
+	}
+	while (!check_dead(philo->phdata))
+	{
+		if(pthread_mutex_lock(f_fork) == 0)
 		{
-			if(pthread_mutex_lock(philo->r_fork) == 0)
+			if(pthread_mutex_lock(s_fork) == 0)
 			{
 				return (1);
 			}
-			pthread_mutex_unlock(philo->l_fork);
+			pthread_mutex_unlock(f_fork);
 		}
-		if (gs_logs(philo->phdata, philo->id, "is thinking"))
-			return (0);
-		//usleep(500);
-		if(check_dead(philo->phdata))
-			return (0);
 	}
 	return (0);
 }
@@ -117,8 +148,12 @@ void    *gs_routi(void *arg)
 
 	philo = (t_philo *)arg;
 	if (philo->id % 2 == 0)
-		usleep(10000);
-	while(!philo->phdata->stop_sim)
+	{
+		if (gs_logs(philo->phdata, philo->id, "is thinking"))
+				return (NULL);
+		usleep(1000);
+	}
+	while(!check_dead(philo->phdata))
 	{
 		if (philo->phdata->num_philo == 1)
 			return (handle_one_philo(philo)); 
@@ -131,12 +166,12 @@ void    *gs_routi(void *arg)
 				return (NULL);
 			gs_sleep(philo->phdata->time_to_sleep, philo);
 			//continue ;
+			if (gs_logs(philo->phdata, philo->id, "is thinking"))
+				return (NULL);
 		}
 		//usleep(philo->phdata->time_to_sleep * 1000); //need to check during this time if the philo is dead
 		//else
 		//{
-		// if (gs_logs(philo->phdata, philo->id, "is thinking"))
-		// 	return (NULL);
 		else
 			usleep(500);
 			//gs_sleep(1, philo);
@@ -186,7 +221,7 @@ void    *gs_mont(void *arg)
 	//int k;
 
 	phdata = (t_phdata *)arg;
-	while (!phdata->stop_sim)
+	while (!check_dead(phdata))
 	{
 		i = 0;
 		//k = 0;
