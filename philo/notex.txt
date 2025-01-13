@@ -15,6 +15,8 @@
   is it fine or i should i only think if i am not able to eat, but i think its wrong
 - also i need to keep checking for forks availability
 
+-"is thinking" log is not getting printed out !!!!!!!!!!!!!
+
 0-200
 200-400
 

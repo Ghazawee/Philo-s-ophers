@@ -2,15 +2,18 @@
 
 void	gs_sleep(int time, t_philo *philo) // maybe return 0/1 if philo is dead or not
 {
-	long action;
+	long start;
+	//long elapsed;
 
-	action = time;
-	while (action > 0)
+	// action = time;
+	start = get_time();
+	//elapsed = get_time() - start;
+	while (get_time() - start < time)
 	{
 		if (check_dead(philo->phdata))
 			return ;
-		usleep(1000);
-		action -= 1;
+		usleep(100);
+		//action -= 1;
 	}
 }
 
@@ -47,58 +50,35 @@ int	gs_logs(t_phdata *phdata, int id, char *msg)
 	return (0);
 }
 
-void	unlock_fork_waiter(t_philo *philo, int count) // remove waiter from the function, this will only handle forks
+void	unlock_fork(t_philo *philo) // remove waiter from the function, this will only handle forks
 {
-	if(count == 1)
-	{
-		pthread_mutex_unlock(philo->r_fork);
-		pthread_mutex_unlock(philo->l_fork);
-	}
-	else if(count == 2)
-	{
-		//pthread_mutex_unlock(&philo->phdata->waiter);
-		pthread_mutex_unlock(philo->l_fork);
-	}
-	else if (count == 3)
-	{
-		//pthread_mutex_unlock(&philo->phdata->waiter);
-		pthread_mutex_unlock(philo->r_fork);
-		pthread_mutex_unlock(philo->l_fork);
-	}
+	pthread_mutex_unlock(philo->r_fork);
+	pthread_mutex_unlock(philo->l_fork);
 }
 
 void	philo_eat(t_philo *philo)
 {
-	//pthread_mutex_lock(&philo->phdata->waiter); // no need for waiter mutex
-	pthread_mutex_lock(philo->l_fork);
 	if (gs_logs(philo->phdata, philo->id, "has taken a fork"))
 	{
-		unlock_fork_waiter(philo, 2);
+		unlock_fork(philo);
 		return ;
 	}
-	pthread_mutex_lock(philo->r_fork);
 	if (gs_logs(philo->phdata, philo->id, "has taken a fork"))
 	{
-		unlock_fork_waiter(philo, 3);
+		unlock_fork(philo);
 		return ;
 	}
-	//pthread_mutex_unlock(&philo->phdata->waiter); 
 	if (gs_logs(philo->phdata, philo->id, "is eating"))
 	{
-		unlock_fork_waiter(philo, 1);
+		unlock_fork(philo);
 		return ;
 	}
-	usleep(philo->phdata->time_to_eat * 1000); // need to check during this time if the philo is dead
+	gs_sleep(philo->phdata->time_to_eat, philo); // maybe make gs_sleep return 0/1 if philo is dead or not, and in this case i need to unlock forks before returning
 	pthread_mutex_lock(&philo->phdata->state);
 	philo->last_meal = get_time();
-	philo->meals_count++; // maybe i need to increment this after the usleep ??
+	philo->meals_count++;
 	pthread_mutex_unlock(&philo->phdata->state);
-	if (check_dead(philo->phdata))
-	{
-		unlock_fork_waiter(philo, 1);
-		return ;
-	}
-	unlock_fork_waiter(philo, 1);
+	unlock_fork(philo);
 }
 
 void	*handle_one_philo(t_philo *philo)
@@ -109,53 +89,126 @@ void	*handle_one_philo(t_philo *philo)
 	return (NULL);
 }
 
+int	is_forks_pickable(t_philo *philo)
+{
+	while (!philo->phdata->stop_sim)
+	{
+		if(pthread_mutex_lock(philo->l_fork) == 0)
+		{
+			if(pthread_mutex_lock(philo->r_fork) == 0)
+			{
+				return (1);
+			}
+			pthread_mutex_unlock(philo->l_fork);
+		}
+		if (gs_logs(philo->phdata, philo->id, "is thinking"))
+			return (0);
+		//usleep(500);
+		if(check_dead(philo->phdata))
+			return (0);
+	}
+	return (0);
+}
+ 
+
 void    *gs_routi(void *arg)
 {
 	t_philo *philo;
 
 	philo = (t_philo *)arg;
+	if (philo->id % 2 == 0)
+		usleep(10000);
 	while(!philo->phdata->stop_sim)
 	{
 		if (philo->phdata->num_philo == 1)
 			return (handle_one_philo(philo)); 
-		if (gs_logs(philo->phdata, philo->id, "is thinking"))
-			return (NULL);
-		philo_eat(philo); // need to check if forks avail before hand and only then i eat and sleep, else they think
-		if (check_dead(philo->phdata))
-			return (NULL);
-		if (gs_logs(philo->phdata, philo->id, "is sleeping"))
-			return (NULL);
-		usleep(philo->phdata->time_to_sleep * 1000); //need to check during this time if the philo is dead
+		if (is_forks_pickable(philo))
+		{
+			philo_eat(philo); // need to check if forks avail before hand and only then i eat and sleep, else they think
+			if (check_dead(philo->phdata))
+				return (NULL);
+			if (gs_logs(philo->phdata, philo->id, "is sleeping"))
+				return (NULL);
+			gs_sleep(philo->phdata->time_to_sleep, philo);
+			//continue ;
+		}
+		//usleep(philo->phdata->time_to_sleep * 1000); //need to check during this time if the philo is dead
+		//else
+		//{
+		// if (gs_logs(philo->phdata, philo->id, "is thinking"))
+		// 	return (NULL);
+		else
+			usleep(500);
+			//gs_sleep(1, philo);
+		//}
 	}
 	return (NULL);
 }
+
+int	check_philo_death(t_phdata *phdata, int i)
+{
+	pthread_mutex_lock(&phdata->state);
+	if (get_time() - phdata->philo[i].last_meal > phdata->time_to_die)
+	{
+		gs_logs(phdata, phdata->philo[i].id, "died");
+		lock_set_unlock(&phdata->stop_mutex, &phdata->stop_sim, 1);
+		pthread_mutex_unlock(&phdata->state);
+		return (1);
+	}
+	pthread_mutex_unlock(&phdata->state);
+	return (0);
+}
+
+int	check_eat_limit(t_phdata *phdata)
+{
+	int i;
+	int count;
+
+	i = 0;
+	count = 0;
+	while (i < phdata->num_philo)
+	{
+		pthread_mutex_lock(&phdata->state);
+		if (phdata->philo[i].meals_count >= phdata->eat_limit)
+			count++;
+		pthread_mutex_unlock(&phdata->state);
+		i++;
+	}
+	if (count == phdata->num_philo)
+		return (1);
+	return (0);
+}
+
 void    *gs_mont(void *arg)
 {
 	t_phdata *phdata;
 	int i;
-	int k;
+	//int k;
 
 	phdata = (t_phdata *)arg;
 	while (!phdata->stop_sim)
 	{
 		i = 0;
-		k = 0;
+		//k = 0;
 		while (i < phdata->num_philo)
 		{
-			pthread_mutex_lock(&phdata->state);
-			if (get_time() - phdata->philo[i].last_meal > phdata->time_to_die)
-			{
-				gs_logs(phdata, phdata->philo[i].id, "died");
-				lock_set_unlock(&phdata->stop_mutex, &phdata->stop_sim, 1);
-				pthread_mutex_unlock(&phdata->state);
+			if (check_philo_death(phdata, i))
 				return (NULL);
-			}
-			if (phdata->eat_limit != -1 && phdata->philo[i].meals_count >= phdata->eat_limit)
-				k++;
-			pthread_mutex_unlock(&phdata->state);
+			// pthread_mutex_lock(&phdata->state);
+			// if (get_time() - phdata->philo[i].last_meal > phdata->time_to_die)
+			// {
+			// 	gs_logs(phdata, phdata->philo[i].id, "died");
+			// 	lock_set_unlock(&phdata->stop_mutex, &phdata->stop_sim, 1);
+			// 	pthread_mutex_unlock(&phdata->state);
+			// 	return (NULL);
+			// }
+			// if (phdata->eat_limit != -1 && phdata->philo[i].meals_count >= phdata->eat_limit)
+			// 	k++;
+			// pthread_mutex_unlock(&phdata->state);
 			i++;
 		}
-		if (phdata->eat_limit != -1 && k == phdata->num_philo)
+		// if (phdata->eat_limit != -1 && k == phdata->num_philo)
+		if (phdata->eat_limit != -1 && check_eat_limit(phdata))
 		{
 			lock_set_unlock(&phdata->stop_mutex, &phdata->stop_sim, 1);
 			return (NULL);

@@ -50,6 +50,7 @@ int		get_time();
 //---------------philo_routine-----------------//
 void    *gs_routi(void *arg);
 void    *gs_mont(void *arg);
+int		check_dead(t_phdata *phdata);
 //------------------utils---------------------//
 int     is_digit(char c);
 int     ft_atoi(const char *s);
