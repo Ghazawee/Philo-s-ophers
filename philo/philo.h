@@ -17,8 +17,10 @@ typedef	struct	s_philo
 	int				id;
 	int		 		meals_count;
 	int         	last_meal;
-	pthread_mutex_t	*l_fork;
-	pthread_mutex_t	*r_fork;
+	// pthread_mutex_t	*l_fork;
+	// pthread_mutex_t	*r_fork;
+	int				l_fork;
+	int				r_fork;
 	t_phdata		*phdata;
 }t_philo;
 
@@ -31,7 +33,7 @@ typedef struct	s_phdata
 	int     		eat_limit;
 	long			start_time;
 	int				stop_sim;
-	// char			*forks;
+	char			*forks_st;
 	pthread_mutex_t	*forks;
 	pthread_mutex_t	print;
 	pthread_mutex_t state;
@@ -48,10 +50,13 @@ void	cleanup_all(t_phdata *phdata);
 //------------------pharse---------------------//
 void    gs_init_phdata(char **av, t_phdata *phdata);
 int		get_time();
+void	pick_order(t_philo *philo, int *first, int *second);
 //---------------philo_routine-----------------//
 void    *gs_routi(void *arg);
-void    *gs_mont(void *arg);
+int		gs_logs(t_phdata *phdata, int id, char *msg);
 int		check_dead(t_phdata *phdata);
+//---------------monitor-----------------------//
+void    *gs_mont(void *arg);
 //------------------utils---------------------//
 int     is_digit(char c);
 int     ft_atoi(const char *s);

@@ -5,6 +5,7 @@ SRC = mainlo.c \
 	utils.c\
 	free_error.c\
 	philo_routine.c\
+	monitor.c\
 
 OBJ = $(SRC:.c=.o)
 

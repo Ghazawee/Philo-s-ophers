@@ -38,4 +38,5 @@ void cleanup_all(t_phdata *phdata)
         cleanup_mutexes(phdata);
     if(phdata->philo)
         free(phdata->philo);
+    free(phdata->forks_st);
 }
